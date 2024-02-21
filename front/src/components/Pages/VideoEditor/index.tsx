@@ -8,6 +8,8 @@ import { VideoFooter } from '../../Organisms/VideoFooter';
 import { useRenderLoop } from '../../../hooks/useRenderLoop';
 import { ExportModal } from './ExportModal';
 import { useVideo } from './useVideo';
+import { LayerEditor } from './LayerEditor';
+import { defaultLayers } from '../../../Utils/LayerGenerator';
 
 export interface VideoEditorProps {
   videoUrl: string
@@ -32,21 +34,7 @@ const VideoEditor = ({ videoUrl }: VideoEditorProps) => {
     currentTime: number,
     totalTime: number
   }>({ currentTime: 0, totalTime: 0});
-  const [layers, setLayers] = useState<Array<Layer>>([{ 
-    id: 0,
-    borderColor: '#FF0099',
-    zIndex: 0,
-    input: { rect: { x: 0, y: 0, width: 1080 / 2, height: 1920 / 2 } },
-    output: { rect: { x: 0, y: 0, width: 1080, height: 1920} },
-  },
-  {
-    id: 1,
-    borderColor: '#0066FF',
-    zIndex: 1,
-    input: { rect: { x: 0, y: 0, width: 1920 / 2, height: 1080 / 2 } },
-    output: { rect: { x: 0, y: 0, width: 1080, height: 800 } },
-  },
-]);
+  const [layers, setLayers] = useState<Array<Layer>>(defaultLayers);
 
   useRenderLoop(useCallback(() => {
     if (!videoRef.current) return;
@@ -160,6 +148,7 @@ const VideoEditor = ({ videoUrl }: VideoEditorProps) => {
           videoRef={videoCanvasRef}
           videoResolution={{ height: 1920, width: 1080 }}
         />
+        <LayerEditor layers={layers} setLayer={setLayers} />
       </S.VideoContainer>
       <VideoFooter 
         isPlaying={isPlaying}
@@ -180,7 +169,7 @@ const VideoEditor = ({ videoUrl }: VideoEditorProps) => {
         />
       </S.TimelineContainer>
       <canvas hidden ref={videoCanvasRef} width={1920} height={1080} />
-      <video hidden ref={videoRef} width={960} height={540} src={videoUrl}></video>
+      <video loop hidden ref={videoRef} width={960} height={540} src={videoUrl}></video>
     </S.Container>
   )
 }

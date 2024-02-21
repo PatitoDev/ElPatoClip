@@ -11,6 +11,7 @@ const checkIfIsResize = (layers: Array<Layer>, clicked: Point) => {
   let cornerClicked: string | undefined;
 
   for (const layer of layers) {
+      if (layer.locked) continue;
       const cornerBit = MathUtils.getNearestCorner(clicked, layer.output.rect, RESIZE_HANLDER_RADIUS);
       if (cornerBit === null) continue;
       if (!topClickedLayer) {
@@ -78,6 +79,7 @@ export const VideoCanvas = ({
     }
 
     const layer = layers
+      .filter(layer => !layer.locked)
       .reduce((prevLayer, layer) => {
         const clickedOnLayer = MathUtils.isInsideRect(clicked, layer.output.rect);
         if (!clickedOnLayer) return prevLayer;
@@ -202,21 +204,24 @@ export const VideoCanvas = ({
         ) return;
 
       ctx.reset()
+      const layersSorted = layers.sort((a, b) => a.zIndex - b.zIndex);
       if (renderVideo) {
         ctx.drawImage(videoEl, 0,0, videoResolution.width,  videoResolution.height);
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
         ctx.fillRect(0,0, videoResolution.width, videoResolution.height);
 
-        for (const { output, borderColor } of layers) {
-          CanvasUtils.drawImageFromSource(ctx, videoEl, output, output);
+        for (const { output, borderColor, locked, filter } of layersSorted) {
+          if (locked) continue;
+          CanvasUtils.drawImageFromSource(ctx, videoEl, output, output, filter);
           CanvasUtils.renderCropArea(ctx, output.rect, borderColor);
         }
         return;
       }
 
-      for (const { output, input, borderColor } of layers) {
+      for (const { output, input, borderColor, locked, filter } of layersSorted) {
         if (!input) return;
-        CanvasUtils.drawImageFromSource(ctx, videoEl, input, output);
+        CanvasUtils.drawImageFromSource(ctx, videoEl, input, output, filter);
+        if (locked) continue;
         CanvasUtils.renderCropArea(ctx, output.rect, borderColor);
       }
   }, [layers, renderVideo, videoRef, videoResolution]));
