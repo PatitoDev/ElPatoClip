@@ -5,8 +5,8 @@ import { Layer, TimeSlice, Source } from '../../../types';
 import { VideoCanvas } from '../../Molecules/Editor/VideoCanvas';
 import { ExportModal } from '../../Pages/VideoEditorPage/ExportModal';
 import { useVideo } from '../../Pages/VideoEditorPage/useVideo';
-import { LayerEditor } from '../../Molecules/Editor/LayerEditor';
 import { LeftContainer } from './LeftContainer';
+import { EditorSideBar } from '../../Molecules/Editor/EditorSideBar';
 
 export interface VideoEditorProps {
   videoUrl: string,
@@ -30,6 +30,8 @@ const VideoEditor = ({
   const video = useVideo(videoRef, cropTime, setSeekWithAnimation);
   const videoCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [selectedLayerId, setSelectedLayerId] = useState<number | null>(null);
+  const [hoverLayerId, setHoverLayerId] = useState<number | null>(null);
 
   useRenderLoop(useCallback(() => {
     if (!videoRef.current) return;
@@ -116,20 +118,27 @@ const VideoEditor = ({
         </S.ModalOverlay>
       )}
 
-
       <S.Container>
         <S.SideBySideContainer>
           <S.PotraitVideo>
             <VideoCanvas
-              toggleVideoPlayback={video.toggleVideoPlayback}
+              hoverLayerId={hoverLayerId}
+              selectedLayerId={selectedLayerId}
+              setHoverLayerId={setHoverLayerId}
+              setSelectedLayerId={setSelectedLayerId}
+              direction='portrait'
               onOutputChange={onOutputChange}
               layers={outputLayers}
               videoRef={videoCanvasRef}
-              videoResolution={{ height: 1920, width: 1080 }}
+              withPadding
             />         
           </S.PotraitVideo>
 
           <LeftContainer 
+            hoverLayerId={hoverLayerId}
+            selectedLayerId={selectedLayerId}
+            setHoverLayerId={setHoverLayerId}
+            setSelectedLayerId={setSelectedLayerId}
             cropTime={cropTime}
             inputLayers={inputLayers}
             onInputChange={onInputChange}
@@ -141,7 +150,14 @@ const VideoEditor = ({
           />
 
         </S.SideBySideContainer>
-        <LayerEditor layers={layers} setLayer={setLayers} />
+        <S.SidePanelContainer>
+          <EditorSideBar 
+            layers={layers}
+            selectedLayerId={selectedLayerId}
+            setLayers={setLayers}
+            setSelectedLayerId={setSelectedLayerId}
+          />
+        </S.SidePanelContainer>
       </S.Container>
 
       <canvas hidden ref={videoCanvasRef} width={1920} height={1080} />
