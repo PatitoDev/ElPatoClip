@@ -1,3 +1,5 @@
+import { User } from '../../authContext';
+import { PostVideoPayload } from '../tiktokApi';
 import { readBlob } from './responseReaders';
 import { ChannelSearchResponse, ClipListRequestFilters, ClipsResponse, UserDetails  } from './types';
 
@@ -29,9 +31,76 @@ const searchUser = async (searchString: string) => {
   return await resp.json() as Array<ChannelSearchResponse>;
 };
 
+const authenticate = async (code: string) => {
+  const resp = await fetch(`${baseApi}login`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ 
+      code,
+      provider: 'tiktok'
+    })
+  });
+
+  if (!resp.ok) return;
+
+  return await resp.json() as {
+    user: User,
+    token: string
+  };
+};
+
+const getUploadToken = async (elPatoAuthToken: string, connectionType: string) => {
+  const resp = await fetch(`${baseApi}upload-token/${connectionType}`, {
+    headers: {
+      'Authorization': `Bearer ${elPatoAuthToken}`
+    }
+  });
+
+  if (!resp.ok) return;
+
+  const data = await resp.json() as { token: string };
+  return data.token;
+};
+
+const initiateVideo = async (payload: PostVideoPayload, token: string) => {
+  const resp = await fetch(`${baseApi}user/initiate-upload`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+  if (!resp.ok) return;
+  return await resp.json() as { 
+    publish_id: string,
+    upload_url: string
+  };
+};
+
+const getVideoStatus = async (videoId: string, token: string) => {
+  const resp = await fetch(`${baseApi}video/status`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      id: videoId
+    })
+  });
+  return await resp.json();
+};
+
 export const ElPatoApi = {
   getClips,
   getClip,
   searchUser,
-  getChannelDetails
+  getChannelDetails,
+  authenticate,
+  getUploadToken,
+  initiateVideo,
+  getVideoStatus
 };

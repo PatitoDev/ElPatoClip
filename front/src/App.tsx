@@ -5,44 +5,64 @@ import MainTemplate from './components/Templates/MainTemplate';
 import { TosPage } from './components/Pages/InfoPages/TosPage';
 import { PrivacyPage } from './components/Pages/InfoPages/PrivacyPage';
 import { VideoEditorPage } from './components/Pages/VideoEditorPage';
+import { LoginPage } from './components/Pages/LoginPage';
+import { UserProvider } from './authContext';
 
 const router = createBrowserRouter([
   {
     path: '/',
     element:
-      <MainTemplate withHeader>
-        <SearchPage />
-      </MainTemplate>
+      <UserProvider>
+        <MainTemplate withHeader>
+          <SearchPage />
+        </MainTemplate>
+      </UserProvider>
+  },
+  {
+    path: '/login',
+    element: 
+      <UserProvider>
+        <LoginPage />
+      </UserProvider>
   },
   {
     path: '/clips/:channelId',
     element:
-      <MainTemplate withHeader>
-        <ClipPage />
-      </MainTemplate>
+      <UserProvider>
+        <MainTemplate withHeader>
+          <ClipPage />
+        </MainTemplate>
+      </UserProvider>
   },
   {
     path: '/editor/:clipId',
-    element: <VideoEditorPage />
+    element: 
+      <UserProvider>
+        <VideoEditorPage />
+      </UserProvider>
   },
   {
     path: '/tos',
     element: 
-      <MainTemplate withHeader>
-        <TosPage />
-      </MainTemplate>
+      <UserProvider>
+        <MainTemplate withHeader>
+          <TosPage />
+        </MainTemplate>
+      </UserProvider>
   },
   {
     path: '/privacy',
     element: 
-      <MainTemplate withHeader>
-        <PrivacyPage />
-      </MainTemplate>
+      <UserProvider>
+        <MainTemplate withHeader>
+          <PrivacyPage />
+        </MainTemplate>
+      </UserProvider>
   },
 ]);
 
 const App = () => (
-  <RouterProvider router={router}/>
+  <RouterProvider router={router} />
 );
 
 export default App;

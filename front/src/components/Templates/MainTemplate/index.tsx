@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom';
 import * as S from './styles';
 import { useEffect, useState } from 'react';
+import { useAuth } from '../../../authContext/useAuth';
+import { Button } from '../../Atoms/Button';
+
+
 
 export interface MainTemplateProps {
   children: React.ReactNode;
@@ -8,6 +12,7 @@ export interface MainTemplateProps {
 }
 
 const MainTemplate = (props: MainTemplateProps) => {
+  const auth = useAuth();
   const [isNavOpen, setIsNavOpen] = useState(false);
 
   const handleNav = () => {
@@ -48,6 +53,11 @@ const MainTemplate = (props: MainTemplateProps) => {
               <Link target="_blank" to="https://ko-fi.com/niv3k_el_pato">
                 Support Me :3
               </Link>
+              { auth?.user ? (
+                <Button onClick={auth.logOut}>Logout</Button>
+              ) : (
+                <Link to="/login">Login</Link>
+              )}
             </S.Links>
 
             <S.BurgerIcon>
