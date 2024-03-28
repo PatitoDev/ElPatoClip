@@ -1,5 +1,5 @@
-import { TwitchApi } from "../api/twitchApi";
-import { ChannelSearchResponse } from "../contracts/requests";
+import { TwitchApi } from '../../../api/twitchApi';
+import { ChannelSearchResponse } from '../../../contracts/requests';
 
 export const searchChannelHandler = async (searchString: string, twitchApi: TwitchApi) => {
   const resp = await twitchApi.searchChannel(searchString);
