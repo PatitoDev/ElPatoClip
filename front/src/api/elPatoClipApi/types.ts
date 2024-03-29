@@ -54,3 +54,9 @@ export interface UserDetails {
   offline_image_url: string,
   created_at: string
 }
+
+export interface ElPatoConnection {
+  type: 'twitch' | 'tiktok',
+  displayName: string,
+  profileImageUrl: string
+}

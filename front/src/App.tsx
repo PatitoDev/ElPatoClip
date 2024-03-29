@@ -7,32 +7,52 @@ import { PrivacyPage } from './components/Pages/InfoPages/PrivacyPage';
 import { VideoEditorPage } from './components/Pages/VideoEditorPage';
 import { LoginPage } from './components/Pages/LoginPage';
 import { UserProvider } from './authContext';
+import { AccountPage } from './components/Pages/AccountPage';
+import { AuthPage } from './components/Pages/AuthPage';
+
+const Template = ({ children, withHeader = true }: { children: React.ReactNode, withHeader?: boolean }) => (
+  <UserProvider>
+    <MainTemplate withHeader={withHeader}>
+      {children}
+    </MainTemplate>
+  </UserProvider>
+);
 
 const router = createBrowserRouter([
   {
     path: '/',
     element:
-      <UserProvider>
-        <MainTemplate withHeader>
-          <SearchPage />
-        </MainTemplate>
-      </UserProvider>
+      <Template>
+        <SearchPage />
+      </Template>
+  },
+  {
+    path: '/account',
+    element:
+      <Template>
+        <AccountPage />
+      </Template>
   },
   {
     path: '/login',
     element: 
-      <UserProvider>
+      <Template>
         <LoginPage />
-      </UserProvider>
+      </Template>
+  },
+  {
+    path: '/:action/:authService',
+    element:
+      <Template>
+        <AuthPage />
+      </Template>
   },
   {
     path: '/clips/:channelId',
     element:
-      <UserProvider>
-        <MainTemplate withHeader>
-          <ClipPage />
-        </MainTemplate>
-      </UserProvider>
+      <Template>
+        <ClipPage />
+      </Template>
   },
   {
     path: '/editor/:clipId',
@@ -44,20 +64,16 @@ const router = createBrowserRouter([
   {
     path: '/tos',
     element: 
-      <UserProvider>
-        <MainTemplate withHeader>
-          <TosPage />
-        </MainTemplate>
-      </UserProvider>
+      <Template>
+        <TosPage />
+      </Template>
   },
   {
     path: '/privacy',
     element: 
-      <UserProvider>
-        <MainTemplate withHeader>
-          <PrivacyPage />
-        </MainTemplate>
-      </UserProvider>
+      <Template>
+        <PrivacyPage />
+      </Template>
   },
 ]);
 

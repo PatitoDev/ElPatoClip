@@ -11,7 +11,7 @@ export const Button = styled.button<{
   font-weight: 500;
   font-size: inherit;
   font-family: inherit;
-  padding: 0.2em 0.5em;
+  padding: 0.5em 0.8em;
 
   &:focus-within {
     outline-offset: 2px;

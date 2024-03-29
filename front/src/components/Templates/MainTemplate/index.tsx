@@ -40,21 +40,30 @@ const MainTemplate = (props: MainTemplateProps) => {
                 <img height={23} src="/icons/loading.png" alt="" />
                 El Pato Clip
               </S.HeaderLogo>
+
+              <S.Links>
+                <Link to="/privacy">Privacy</Link>
+                <Link to="/tos">ToS</Link>
+                <Link
+                  target="_blank"
+                  to="https://github.com/Niv3K-El-Pato/ElPatoClip"
+                >
+                Source Code
+                </Link>
+                <Link target="_blank" to="https://ko-fi.com/niv3k_el_pato">
+                Support Me :3
+                </Link>
+              </S.Links>
             </div>
             <S.Links>
-              <Link to="/privacy">Privacy</Link>
-              <Link to="/tos">ToS</Link>
-              <Link
-                target="_blank"
-                to="https://github.com/Niv3K-El-Pato/ElPatoClip"
-              >
-                Source Code
-              </Link>
-              <Link target="_blank" to="https://ko-fi.com/niv3k_el_pato">
-                Support Me :3
-              </Link>
+
               { auth?.user ? (
-                <Button onClick={auth.logOut}>Logout</Button>
+                <>
+                  <Link to="/account">
+                    Account
+                  </Link>
+                  <Button theme="dark" onClick={auth.logOut}>Logout</Button>
+                </>
               ) : (
                 <Link to="/login">Login</Link>
               )}

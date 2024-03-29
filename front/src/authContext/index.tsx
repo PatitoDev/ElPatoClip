@@ -1,10 +1,28 @@
 import { createContext, useCallback, useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ElPatoApi } from '../api/elPatoClipApi';
+import { useNavigate } from 'react-router-dom';
+import { decodeJwt } from 'jose';
 
-export interface UserContextState {
+
+export type UserContextState = {
+  isLoading: boolean,
+  isAuthorized: true,
   user: User,
-  token: string
+  token: string,
+  logOut: () => void,
+  setUserState: React.Dispatch<React.SetStateAction<{
+    user: User,
+    token: string
+  } | null>>
+} | {
+  isLoading: boolean,
+  isAuthorized: false,
+  user?: undefined,
+  token?: undefined,
+  logOut?: undefined
+  setUserState: React.Dispatch<React.SetStateAction<{
+    user: User,
+    token: string
+  } | null>>
 }
 
 export interface User {
@@ -13,20 +31,21 @@ export interface User {
   provider: {
     type: string,
     userId: string,
-    userLogin: string
+    userLogin: string,
+    displayName: string,
+    profileImageUrl: string,
   }
 }
 
-export const userContext = createContext<{
-  logOut: () => void,
-    } & UserContextState | null>(null);
+// eslint-disable-next-line react-refresh/only-export-components
+export const userContext = createContext<UserContextState | null>(null);
 
-const LOCAL_STORAGE_KEY = 'EL_PATO_CLIP_USER';
+export const LOCAL_STORAGE_KEY = 'EL_PATO_CLIP_USER';
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [state, setState] = useState<UserContextState | null>(null);
+  const [state, setState] = useState<{ user: User, token: string } | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const logOut = useCallback(() => {
     setState(null);
@@ -35,36 +54,33 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, [navigate]);
 
   useEffect(() => {
+    setIsLoading(true);
     // load from local storage
-    const item = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!item) return;
-
-    const data = JSON.parse(item) as UserContextState;
-    setState(data);
+    const token = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+    const user = decodeJwt<User>(token);
+    setState({ token, user });
+    setIsLoading(false);
   }, []);
 
-  useEffect(() => {
-    const code = searchParams.get('code');
-    if (!code) return;
-    setSearchParams('');
-
-    const getUserInfo = async () => {
-      const resp = await ElPatoApi.authenticate(code);
-      if (!resp) throw new Error('invalid auth');
-      // todo - handle error handling
-      const newState: UserContextState = { token: resp.token, user: resp.user };
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newState));
-      setState(newState);
-    };
-
-    getUserInfo();
-  }, [searchParams, setSearchParams]);
+  const exposedState: UserContextState = state ? {
+    logOut,
+    setUserState: setState,
+    isAuthorized: true,
+    token: state.token,
+    user: state.user,
+    isLoading
+  } : {
+    setUserState: setState,
+    isAuthorized: false,
+    isLoading
+  };
 
   return (
-    <userContext.Provider value={state ? {
-      ...state,
-      logOut
-    } : null}>
+    <userContext.Provider value={exposedState}>
       {children}
     </userContext.Provider>
   );

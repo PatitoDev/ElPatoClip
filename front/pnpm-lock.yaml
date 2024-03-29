@@ -23,6 +23,9 @@ dependencies:
   fix-webm-duration:
     specifier: ^1.0.5
     version: 1.0.5
+  jose:
+    specifier: ^5.2.3
+    version: 5.2.3
   react:
     specifier: ^18.2.0
     version: 18.2.0
@@ -6572,6 +6575,10 @@ packages:
       merge-stream: 2.0.0
       supports-color: 8.1.1
     dev: true
+
+  /jose@5.2.3:
+    resolution: {integrity: sha512-KUXdbctm1uHVL8BYhnyHkgp3zDX5KW8ZhAKVFEfUbU2P8Alpzjb+48hHvjOdQIyPshoblhzsuqOwEEAbtHVirA==}
+    dev: false
 
   /js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}

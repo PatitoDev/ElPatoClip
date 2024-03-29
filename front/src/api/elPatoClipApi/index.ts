@@ -1,7 +1,6 @@
-import { User } from '../../authContext';
 import { PostVideoPayload } from '../tiktokApi';
 import { readBlob } from './responseReaders';
-import { ChannelSearchResponse, ClipListRequestFilters, ClipsResponse, UserDetails  } from './types';
+import { ChannelSearchResponse, ClipListRequestFilters, ClipsResponse, ElPatoConnection, UserDetails  } from './types';
 
 const baseApi = import.meta.env.MODE === 'production' ?  'https://api.niv3kelpato.com/clipApi/' : 'http://localhost:3000/';
 
@@ -31,22 +30,22 @@ const searchUser = async (searchString: string) => {
   return await resp.json() as Array<ChannelSearchResponse>;
 };
 
-const authenticate = async (code: string) => {
+const authenticate = async (code: string, provider: string, redirectUrl: string) => {
   const resp = await fetch(`${baseApi}login`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ 
+    body: JSON.stringify({
       code,
-      provider: 'tiktok'
+      provider: provider,
+      redirectUrl
     })
   });
 
   if (!resp.ok) return;
 
   return await resp.json() as {
-    user: User,
     token: string
   };
 };
@@ -94,6 +93,48 @@ const getVideoStatus = async (videoId: string, token: string) => {
   return await resp.json();
 };
 
+const getAllowedConnections = async (token: string) => {
+  const resp = await fetch(`${baseApi}user/allowed-connections`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  // TODO - add error handling
+  if (!resp.ok) return;
+
+  return await resp.json() as Array<ElPatoConnection>;
+};
+
+const createConnection = async (token: string, connectionType: string, redirectUrl: string, code: string) => {
+  const resp = await fetch(`${baseApi}user/connection/${connectionType}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      code,
+      redirectUrl
+    })
+  });
+
+  return resp.ok;
+};
+
+
+const deleteConnection = async (token: string, connectionType: string) => {
+  const resp = await fetch(`${baseApi}user/connection/${connectionType}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+  });
+
+  return resp.ok;
+};
+
 export const ElPatoApi = {
   getClips,
   getClip,
@@ -102,5 +143,8 @@ export const ElPatoApi = {
   authenticate,
   getUploadToken,
   initiateVideo,
-  getVideoStatus
+  getVideoStatus,
+  getAllowedConnections,
+  createConnection,
+  deleteConnection,
 };
