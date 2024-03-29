@@ -1,4 +1,3 @@
-const REDIRECT_URL = 'https://clip.elpato.dev';
 const BASE_URL = 'http://localhost:8022';
 const APP_ID = 'elpatoclip';
 
@@ -7,7 +6,11 @@ export enum LoginServices {
   twitch = 'twitch'
 }
 
-export const authenticate = async (code: string, service: LoginServices) => {
+export enum ConnectionServices {
+  tiktok = 'tiktok',
+}
+
+export const authenticate = async (code: string, service: LoginServices, redirectUrl: string) => {
   const resp = await fetch(BASE_URL + `/${APP_ID}/authenticate/${service}`, {
     method: 'POST',
     headers: {
@@ -15,7 +18,7 @@ export const authenticate = async (code: string, service: LoginServices) => {
     },
     body: JSON.stringify({
       code,
-      redirectUrl: REDIRECT_URL
+      redirectUrl
     })
   });
 
@@ -37,9 +40,11 @@ export const verifyToken = async (token: string) => {
 
 export interface ElPatoConnection {
   token: string,
-  refresh_token: string,
-  user_id: string,
-  type: 'tiktok' | 'twitch' | 'youtube'
+  refreshToken: string,
+  userId: string,
+  type: 'tiktok' | 'twitch' | 'youtube',
+  displayName: string,
+  profileImageUrl: string
 }
 
 export const getConnections = async (userId: number) => {
@@ -47,4 +52,25 @@ export const getConnections = async (userId: number) => {
   if (!resp.ok) return;
 
   return await resp.json() as Array<ElPatoConnection>;
+};
+
+export const deleteConnection = async (userId: number, connectionType: ConnectionServices) => {
+  const resp = await fetch(`${BASE_URL}/${APP_ID}/user/${userId}/connection/${connectionType}`, {
+    method: 'DELETE'
+  });
+  return resp.ok;
+};
+
+export const createConnection = async (userId: number, connectionType: ConnectionServices, code: string, redirectUrl: string) => {
+  const resp = await fetch(`${BASE_URL}/${APP_ID}/user/${userId}/connection/${connectionType}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      code,
+      redirectUrl
+    })
+  });
+  return resp.ok;
 };

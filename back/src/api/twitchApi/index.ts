@@ -43,7 +43,12 @@ export class TwitchApi {
       }
     });
 
-    if (!resp.ok) throw new BadRequestError(`twitch api error: ${resp.status}`);
+    if (!resp.ok) {
+      console.error('Unable to get twitch clips', resp.status);
+      const error = await resp.text();
+      console.error(error);
+      throw new BadRequestError(`twitch api error: ${resp.status}`);
+    }
 
     return await resp.json() as TwitchPaginatedResult<TwitchClip>;
   };

@@ -5,12 +5,13 @@ import { LoginServices } from '../../api/authApi';
 
 app.post('/login', async (req, res) => {
   try {
-    const { code, provider } = z.object({
+    const { code, provider, redirectUrl } = z.object({
       code: z.string(),
-      provider: z.nativeEnum(LoginServices)
+      provider: z.nativeEnum(LoginServices),
+      redirectUrl: z.string()
     }).parse(req.body);
 
-    const user = await loginHandler(code, provider);
+    const user = await loginHandler(code, provider, redirectUrl);
 
     if (!user) {
       res.status(401).send();
