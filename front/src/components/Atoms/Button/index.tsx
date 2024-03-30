@@ -2,7 +2,7 @@ import styled, { css } from 'styled-components';
 
 
 export const Button = styled.button<{
-  theme: 'light' | 'dark'
+  theme?: 'light' | 'dark'
 }>`
   cursor: pointer;
   outline: none;
@@ -18,7 +18,7 @@ export const Button = styled.button<{
     outline: 2px solid white;
   }
 
-  ${props => props.theme === 'light' && css`
+  ${props => !props.theme || props.theme === 'light' && css`
     background-color: #FFEB39;
     color: #4A4A4A;
     &:hover {
