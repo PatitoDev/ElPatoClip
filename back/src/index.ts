@@ -25,7 +25,7 @@ export const handleError = (err: unknown, res: Response) => {
 
 import './routes/clips';
 import './routes/login';
-import './routes/videoPosting';
+import './routes/tiktokVideoPosting';
 import './routes/channels';
 import './routes/connections';
 

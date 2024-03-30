@@ -1,6 +1,6 @@
 import { PostVideoPayload } from '../tiktokApi';
 import { readBlob } from './responseReaders';
-import { ChannelSearchResponse, ClipListRequestFilters, ClipsResponse, ElPatoConnection, UserDetails  } from './types';
+import { ChannelSearchResponse, ClipListRequestFilters, ClipsResponse, CreatorPublishPermissionResponse, ElPatoConnection, UserDetails  } from './types';
 
 const baseApi = import.meta.env.MODE === 'production' ?  'https://api.niv3kelpato.com/clipApi/' : 'http://localhost:3000/';
 
@@ -64,7 +64,7 @@ const getUploadToken = async (elPatoAuthToken: string, connectionType: string) =
 };
 
 const initiateVideo = async (payload: PostVideoPayload, token: string) => {
-  const resp = await fetch(`${baseApi}user/initiate-upload`, {
+  const resp = await fetch(`${baseApi}tiktok/initiate-upload`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -80,7 +80,7 @@ const initiateVideo = async (payload: PostVideoPayload, token: string) => {
 };
 
 const getVideoStatus = async (videoId: string, token: string) => {
-  const resp = await fetch(`${baseApi}video/status`, {
+  const resp = await fetch(`${baseApi}tiktok/video/status`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -123,7 +123,6 @@ const createConnection = async (token: string, connectionType: string, redirectU
   return resp.ok;
 };
 
-
 const deleteConnection = async (token: string, connectionType: string) => {
   const resp = await fetch(`${baseApi}user/connection/${connectionType}`, {
     method: 'DELETE',
@@ -133,6 +132,16 @@ const deleteConnection = async (token: string, connectionType: string) => {
   });
 
   return resp.ok;
+};
+
+const getTiktokCreatorPermissions = async (token: string) => {
+  const resp = await fetch(`${baseApi}tiktok/permissions`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return await resp.json() as CreatorPublishPermissionResponse;
 };
 
 export const ElPatoApi = {
@@ -147,4 +156,5 @@ export const ElPatoApi = {
   getAllowedConnections,
   createConnection,
   deleteConnection,
+  getTiktokCreatorPermissions
 };

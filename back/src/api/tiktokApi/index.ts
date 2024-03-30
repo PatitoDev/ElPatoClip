@@ -1,4 +1,4 @@
-import { PostVideoRequest } from './types';
+import { CreatorPublishPermissionResponse, PostVideoRequest } from './types';
 
 
 /**
@@ -67,7 +67,22 @@ const getUploadStatus = async (videoId: string, token: string) => {
   return await resp.json() as StatusResponse;
 }; 
 
+const getCreatorPermissions = async (token: string) => {
+  const url = 'https://open.tiktokapis.com/v2/post/publish/creator_info/query/';
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json; charset=UTF-8'
+    }
+  });
+
+
+  return await resp.json() as CreatorPublishPermissionResponse;
+};
+
 export const TiktokApi = {
   initiateVideo,
-  getUploadStatus
+  getUploadStatus,
+  getCreatorPermissions
 };

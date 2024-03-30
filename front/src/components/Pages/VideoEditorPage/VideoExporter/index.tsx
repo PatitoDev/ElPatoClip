@@ -67,7 +67,7 @@ export const VideoExporter = ({
 
   const upload = useCallback(async () => {
     if (!outputUrl) return;
-    if (!auth) return;
+    if (!auth.isAuthorized) return;
     console.log('uploading...');
     const videoBlob = await (await fetch(outputUrl)).blob();
     // todo - break it into chunks correctly
