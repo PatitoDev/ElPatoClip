@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { app, handleError } from '../..';
-import { ConnectionServices, getConnections } from '../../api/authApi';
+import { ConnectionServices } from '../../api/authApi';
 import { getUserIdFromToken } from '../../getUserFromToken';
 import { getAllowedConnectionsHandler } from './handlers/getAllowedConnectionsHandler';
 import { deleteConnectionHandler } from './handlers/deleteConnectionHandler';
@@ -37,14 +37,13 @@ app.delete('/user/connection/:connectionType', async (req, res) => {
   }
 });
 
-app.get('/user/allowed-connections', async (req, res) => {
+app.get('/user/connection/:connectionType', async (req, res) => {
   try {
     const userId = getUserIdFromToken(req.headers);
     if (!userId) return res.status(401).send();
-    const connections = await getConnections(userId);
-    if (!connections) return res.status(500).send();
 
-    const data = await getAllowedConnectionsHandler(userId);
+    const data = await getAllowedConnectionsHandler(userId, req.params.connectionType);
+    if (!data) return res.status(404);
     res.status(200).send(data);
   } catch(err) {
     handleError(err, res);

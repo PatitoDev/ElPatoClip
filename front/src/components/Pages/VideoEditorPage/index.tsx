@@ -8,13 +8,13 @@ import { defaultLayers } from '../../../Utils/LayerGenerator';
 import { VideoExporter } from './VideoExporter';
 import VideoEditor from '../../Organisms/Editor';
 
-const bytesToRedable = (amount: number) => {
+const bytesToReadable = (amount: number) => {
   if (amount > 1000000) {
     // mb
-    return (amount / 1000000).toFixed(2).toString() + ' mb';
+    return (amount / 1000000).toFixed(2).toString() + ' MiB';
   } else {
     // kb
-    return (amount / 10000).toString() + ' kb';
+    return (amount / 10000).toString() + ' KB';
   }
 };
 
@@ -39,10 +39,10 @@ export const VideoEditorPage = () => {
       // get clip metadata
       const blob = await ElPatoApi.getClip(clipId, (amount, total) => {
 
-        const totalStr = total === 0 ? '?' : bytesToRedable(total);
+        const totalStr = total === 0 ? '?' : bytesToReadable(total);
 
         setProgress({
-          amount: bytesToRedable(amount),
+          amount: bytesToReadable(amount),
           total: totalStr
         });
       });

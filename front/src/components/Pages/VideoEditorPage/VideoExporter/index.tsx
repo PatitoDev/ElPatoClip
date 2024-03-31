@@ -4,12 +4,13 @@ import { Layer, TimeSlice } from '../../../../types';
 import { useVideo } from '../useVideo';
 import { useRenderLoop } from '../../../../hooks/useRenderLoop';
 import { VideoCanvas } from '../../../Molecules/Editor/VideoCanvas';
-import { Button } from '../../../Atoms/Button';
 import { useCanvasRecording } from './useCanvasRecording';
 import { useEventListener } from '../../../../hooks/useEventListener';
 import { TiktokApi } from '../../../../api/tiktokApi';
 import { ElPatoApi } from '../../../../api/elPatoClipApi';
 import { useAuth } from '../../../../authContext/useAuth';
+import { TikTokPublishFormData, TiktokPublishForm } from './TiktokPublishForm';
+import { Button } from '../../../Atoms/Button';
 
 export interface VideoExporterProps {
   videoUrl: string,
@@ -65,7 +66,7 @@ export const VideoExporter = ({
     input: item.input
   })), [layers]);
 
-  const upload = useCallback(async () => {
+  const upload = useCallback(async (formData: TikTokPublishFormData) => {
     if (!outputUrl) return;
     if (!auth.isAuthorized) return;
     console.log('uploading...');
@@ -84,11 +85,11 @@ export const VideoExporter = ({
       post_info: {
         brand_content_toggle: false,
         brand_organic_toggle: false,
-        disable_comment: true,
-        disable_duet: true,
-        disable_stitch: true,
-        privacy_level: 'SELF_ONLY',
-        title: 'Pato intenta explicar lo que hace',
+        disable_comment: formData.allowComment,
+        disable_duet: formData.allowDuet,
+        disable_stitch: formData.allowStitch,
+        privacy_level: formData.privacy,
+        title: formData.title,
         video_cover_timestamp_ms: 100
       }, 
       source_info: {
@@ -140,15 +141,16 @@ export const VideoExporter = ({
       </S.VideoContainer>
       <canvas hidden ref={canvasRef} width={1920} height={1080} />
       <video hidden ref={videoRef} src={videoUrl} width={1920} height={1080} />
-      { outputUrl ?
 
-        <div>
-          <Button theme='light' onClick={() => download(outputUrl)}>Download</Button>
-          <Button theme='light' onClick={upload}>Upload</Button>
-        </div>
-        : 
-        <h2>Rendering...</h2>
-      }
+      <S.RightContainer>
+        { outputUrl && (
+          <>
+            <TiktokPublishForm onSubmit={upload} />
+            <Button $variant='white' onClick={() => download(outputUrl)}>Download</Button>
+          </>
+        )}
+
+      </S.RightContainer>
     </S.Container>
   );
 };

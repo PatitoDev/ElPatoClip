@@ -93,18 +93,19 @@ const getVideoStatus = async (videoId: string, token: string) => {
   return await resp.json();
 };
 
-const getAllowedConnections = async (token: string) => {
-  const resp = await fetch(`${baseApi}user/allowed-connections`, {
+const getConnectionDetails = async (token: string, connectionType: string) => {
+  const resp = await fetch(`${baseApi}user/connection/${connectionType}`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
     },
   });
 
-  // TODO - add error handling
+  if (resp.status === 404) return;
+
   if (!resp.ok) return;
 
-  return await resp.json() as Array<ElPatoConnection>;
+  return await resp.json() as ElPatoConnection;
 };
 
 const createConnection = async (token: string, connectionType: string, redirectUrl: string, code: string) => {
@@ -153,7 +154,7 @@ export const ElPatoApi = {
   getUploadToken,
   initiateVideo,
   getVideoStatus,
-  getAllowedConnections,
+  getConnectionDetails,
   createConnection,
   deleteConnection,
   getTiktokCreatorPermissions

@@ -53,7 +53,7 @@ export const EditorHeader = ({
         </S.CanvasSelectionButton>
       </S.CanvasSelectionContainer>
 
-      <Button onClick={onExportClick}>
+      <Button $variant='outline' onClick={onExportClick}>
         Export
       </Button>
     </S.Container>

@@ -62,7 +62,7 @@ const MainTemplate = (props: MainTemplateProps) => {
                   <Link to="/account">
                     Account
                   </Link>
-                  <Button theme="dark" onClick={auth.logOut}>Logout</Button>
+                  <Button $variant="outline" onClick={auth.logOut}>Logout</Button>
                 </>
               ) : (
                 <Link to="/login">Login</Link>

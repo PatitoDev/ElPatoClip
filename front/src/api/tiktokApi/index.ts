@@ -6,11 +6,7 @@ export interface PostVideoPayload {
 
 export interface VideoPostInfo {
   title: string,
-  privacy_level: 
-    'PUBLIC_TO_EVERYONE' | 
-    'MUTUAL_FOLLOW_FRIENDS' | 
-    'FOLLOWER_OF_CREATOR' | 
-    'SELF_ONLY',
+  privacy_level: string,
   disable_duet: boolean,
   disable_comment: boolean,
   disable_stitch: boolean,

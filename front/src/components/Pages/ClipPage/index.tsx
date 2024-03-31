@@ -139,15 +139,15 @@ const ClipPage = () => {
           <S.FilterContainer>
             <Button 
               onClick={() => setSelectedFilter('all time')} 
-              theme={selectedFilter === 'all time' ? 'light' : 'dark'}
+              $variant={selectedFilter === 'all time' ? 'primary' : 'outline'}
             >All time</Button>
             <Button 
               onClick={() => setSelectedFilter('24 hours')} 
-              theme={selectedFilter === '24 hours' ? 'light' : 'dark'}
+              $variant={selectedFilter === '24 hours' ? 'primary' : 'outline'}
             >Last 24 hours</Button>
             <Button 
               onClick={() => setSelectedFilter('last 7 days')} 
-              theme={selectedFilter === 'last 7 days' ? 'light' : 'dark'}
+              $variant={selectedFilter === 'last 7 days' ? 'primary' : 'outline'}
             >Last 7 Days</Button>
           </S.FilterContainer>
         </S.Header>
