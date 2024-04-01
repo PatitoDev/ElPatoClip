@@ -1,37 +1,43 @@
-import { PostVideoPayload } from '../tiktokApi';
+import { ApiResponse } from '../types';
 import { readBlob } from './responseReaders';
-import { ChannelSearchResponse, ClipListRequestFilters, ClipsResponse, CreatorPublishPermissionResponse, ElPatoConnection, UserDetails  } from './types';
+import { ChannelDetails, ChannelSearchResponse, ClipListRequestFilters, ClipsResponse, CreatorPublishPermissionResponse, ElPatoConnection, PostVideoPayload } from './types';
 
 const baseApi = import.meta.env.MODE === 'production' ?  'https://api.niv3kelpato.com/clipApi/' : 'http://localhost:3000/';
 
-const getClips = async (channelName: string, filters: ClipListRequestFilters) => {
-  const resp = await fetch(`${baseApi}channel/${channelName}/clips`, {
+const searchUser = async (searchString: string) => (
+  await request<Array<ChannelSearchResponse>>(`${baseApi}channels?search=${searchString}`)
+);
+
+const getChannelDetails = async (channelId: string): Promise<ApiResponse<ChannelDetails>> => (
+  await request<ChannelDetails>(`${baseApi}channel/${channelId}`)
+);
+
+const getClips = async (channelName: string, filters: ClipListRequestFilters):Promise<ApiResponse<ClipsResponse>> => (
+  await request<ClipsResponse>(`${baseApi}channel/${channelName}/clips`, {
     method: 'POST',
     body: JSON.stringify(filters),
     headers: {
       'content-type': 'application/json',
     }
-  });
-  return (await resp.json()) as ClipsResponse;
+  })
+);
+
+const getClip = async (clipId: string, onProgress: (progress: number, total:number) => void): Promise<ApiResponse<Blob>> => {
+  try {
+    const resp = await fetch(`${baseApi}clip/${clipId}`);
+    if (!resp.ok)
+      return { error: true, status: resp.status, data: null };
+
+    const blob = await readBlob(resp, onProgress);
+    return { data: blob, error: false, status: resp.status };
+  } catch {
+    return { data: null, error: true, status: 500 };
+  }
 };
 
-const getChannelDetails = async (channelId: string) => {
-  const resp = await fetch(`${baseApi}channel/${channelId}`);
-  return await resp.json() as UserDetails;
-};
 
-const getClip = async (clipId: string, onProgress: (progress: number, total:number) => void) => {
-  const resp = await fetch(`${baseApi}clip/${clipId}`);
-  return await readBlob(resp, onProgress);
-};
-
-const searchUser = async (searchString: string) => {
-  const resp = await fetch(`${baseApi}channels?search=${searchString}`);
-  return await resp.json() as Array<ChannelSearchResponse>;
-};
-
-const authenticate = async (code: string, provider: string, redirectUrl: string) => {
-  const resp = await fetch(`${baseApi}login`, {
+const authenticate = async (code: string, provider: string, redirectUrl: string) => (
+  await request<{ token: string }>(`${baseApi}login`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -41,44 +47,51 @@ const authenticate = async (code: string, provider: string, redirectUrl: string)
       provider: provider,
       redirectUrl
     })
-  });
+  })
+);
 
-  if (!resp.ok) return;
+const request = async <T>(path: string, options: RequestInit = {}): Promise<ApiResponse<T>> => {
+  try {
 
-  return await resp.json() as {
-    token: string
-  };
-};
+    const resp = await fetch(path, options);
 
-const getUploadToken = async (elPatoAuthToken: string, connectionType: string) => {
-  const resp = await fetch(`${baseApi}upload-token/${connectionType}`, {
-    headers: {
-      'Authorization': `Bearer ${elPatoAuthToken}`
+    if (!resp.ok)
+      return { error: true, status: resp.status, data: null };
+
+    try {
+      return {
+        data: await resp.json(),
+        error: false,
+        status: resp.status
+      };
+    } catch {
+      return {
+        data: null as T,
+        error: false,
+        status: resp.status
+      };
     }
-  });
-
-  if (!resp.ok) return;
-
-  const data = await resp.json() as { token: string };
-  return data.token;
+  } catch {
+    return {
+      data: null,
+      error: true,
+      status: 500
+    };
+  }
 };
 
-const initiateVideo = async (payload: PostVideoPayload, token: string) => {
-  const resp = await fetch(`${baseApi}tiktok/initiate-upload`, {
+const initiateVideo = async (payload: PostVideoPayload, token: string) => (
+  await request<{ publish_id: string, upload_url: string }>(`${baseApi}tiktok/initiate-upload`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(payload)
-  });
-  if (!resp.ok) return;
-  return await resp.json() as { 
-    publish_id: string,
-    upload_url: string
-  };
-};
+  })
+);
 
+// TODO - type this
 const getVideoStatus = async (videoId: string, token: string) => {
   const resp = await fetch(`${baseApi}tiktok/video/status`, {
     method: 'POST',
@@ -93,23 +106,17 @@ const getVideoStatus = async (videoId: string, token: string) => {
   return await resp.json();
 };
 
-const getConnectionDetails = async (token: string, connectionType: string) => {
-  const resp = await fetch(`${baseApi}user/connection/${connectionType}`, {
+const getConnectionDetails = async (token: string, connectionType: string) => (
+  await request<ElPatoConnection>(`${baseApi}user/connection/${connectionType}`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
     },
-  });
+  })
+);
 
-  if (resp.status === 404) return;
-
-  if (!resp.ok) return;
-
-  return await resp.json() as ElPatoConnection;
-};
-
-const createConnection = async (token: string, connectionType: string, redirectUrl: string, code: string) => {
-  const resp = await fetch(`${baseApi}user/connection/${connectionType}`, {
+const createConnection = async (token: string, connectionType: string, redirectUrl: string, code: string) => (
+  await request(`${baseApi}user/connection/${connectionType}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -119,31 +126,26 @@ const createConnection = async (token: string, connectionType: string, redirectU
       code,
       redirectUrl
     })
-  });
+  })
+);
 
-  return resp.ok;
-};
-
-const deleteConnection = async (token: string, connectionType: string) => {
-  const resp = await fetch(`${baseApi}user/connection/${connectionType}`, {
+const deleteConnection = async (token: string, connectionType: string) => (
+  await request(`${baseApi}user/connection/${connectionType}`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`
     },
-  });
+  })
+);
 
-  return resp.ok;
-};
-
-const getTiktokCreatorPermissions = async (token: string) => {
-  const resp = await fetch(`${baseApi}tiktok/permissions`, {
+const getTiktokCreatorPermissions = async (token: string) => (
+  await request<CreatorPublishPermissionResponse>(`${baseApi}tiktok/permissions`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`
     }
-  });
-  return await resp.json() as CreatorPublishPermissionResponse;
-};
+  })
+);
 
 export const ElPatoApi = {
   getClips,
@@ -151,7 +153,6 @@ export const ElPatoApi = {
   searchUser,
   getChannelDetails,
   authenticate,
-  getUploadToken,
   initiateVideo,
   getVideoStatus,
   getConnectionDetails,

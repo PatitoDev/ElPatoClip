@@ -7,6 +7,7 @@ import { Select } from '../../../../Atoms/Select';
 import { ConnectionButton } from '../../../../Molecules/ConnectionButton';
 import { useAuth } from '../../../../../authContext/useAuth';
 import { ElPatoApi } from '../../../../../api/elPatoClipApi';
+import { ApiResponse } from '../../../../../api/types';
 
 const privacyEnumToDisplayName: Record<string, string> = {
   'PUBLIC_TO_EVERYONE': 'Public',
@@ -31,7 +32,7 @@ export const TiktokPublishForm = ({
   onSubmit
 }: TiktokPublishFormProps) => {
   const auth = useAuth();
-  const [connection, setConnection] = useState<ElPatoConnection | undefined>();
+  const [connection, setConnection] = useState<ApiResponse<ElPatoConnection> | null>(null);
   const [formData, setFormData] = useState<TikTokPublishFormData>({
     allowComment: true,
     allowDuet: true,
@@ -51,7 +52,7 @@ export const TiktokPublishForm = ({
   });
 
   useEffect(() => {
-    if (!auth.isAuthorized || !connection) return;
+    if (!auth.isAuthorized || !connection?.data) return;
 
     const load = async() => {
 
@@ -63,9 +64,18 @@ export const TiktokPublishForm = ({
 
       const resp = await ElPatoApi.getTiktokCreatorPermissions(auth.token);
 
-      if (resp.error.code !== 'ok') {
+      if (resp.error) {
         setCreatorPermissions({
-          error: resp.error.message,
+          error: 'Unable to get tiktok account information. Please try again later',
+          isLoading: false,
+          permissions: null
+        });
+        return;
+      }
+
+      if (resp.data.error.code !== 'ok') {
+        setCreatorPermissions({
+          error: resp.data.error.message,
           isLoading: false,
           permissions: null
         });
@@ -73,16 +83,16 @@ export const TiktokPublishForm = ({
 
       setFormData(prev => ({
         ...prev,
-        privacy: resp.data.privacy_level_options.at(0) ?? '',
-        allowComment: (resp.data.comment_disabled === true) ? false : prev.allowComment,
-        allowDuet: (resp.data.duet_disabled === true) ? false : prev.allowDuet,
-        allowStitch: (resp.data.stitch_disabled === true) ? false : prev.allowStitch,
+        privacy: resp.data.data.privacy_level_options.at(0) ?? '',
+        allowComment: (resp.data.data.comment_disabled === true) ? false : prev.allowComment,
+        allowDuet: (resp.data.data.duet_disabled === true) ? false : prev.allowDuet,
+        allowStitch: (resp.data.data.stitch_disabled === true) ? false : prev.allowStitch,
       }));
 
       setCreatorPermissions({
         error: null,
         isLoading: false,
-        permissions: resp.data
+        permissions: resp.data.data
       });
     };
 

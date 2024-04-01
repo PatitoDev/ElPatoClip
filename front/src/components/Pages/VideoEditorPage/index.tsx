@@ -18,6 +18,7 @@ const bytesToReadable = (amount: number) => {
 };
 
 export const VideoEditorPage = () => {
+  const [hasError, setHasError] = useState<boolean>(false);
   const videoBlobUrl = useEditorState((state) => state.videoBlobUrl);
   const setClipId = useEditorState((state) => state.setClipId);
 
@@ -49,8 +50,7 @@ export const VideoEditorPage = () => {
 
       setIsLoading(true);
       // get clip metadata
-      const blob = await ElPatoApi.getClip(clipId, (amount, total) => {
-
+      const resp = await ElPatoApi.getClip(clipId, (amount, total) => {
         const totalStr = total === 0 ? '?' : bytesToReadable(total);
 
         setProgress({
@@ -58,7 +58,15 @@ export const VideoEditorPage = () => {
           total: totalStr
         });
       });
-      const blobUrl = URL.createObjectURL(blob);
+
+      if (resp.error) {
+        setHasError(true);
+        setIsLoading(false);
+        setProgress(null);
+        return;
+      }
+
+      const blobUrl = URL.createObjectURL(resp.data);
       setClipId(clipId, blobUrl);
       setIsLoading(false);
       setProgress(null);
@@ -78,6 +86,10 @@ export const VideoEditorPage = () => {
         <S.Progress>{progress.amount} / {progress.total}</S.Progress>
       )}
     </S.LoadingVideoContainer>
+  );
+
+  if (hasError) return (
+    <div>Error loading clip. Please try again later</div>
   );
 
   if (isExporting && videoBlobUrl) {

@@ -94,7 +94,7 @@ export const VideoExporter = () => {
       }
     }, auth.token);
 
-    if (!videoContainerUrl) {
+    if (videoContainerUrl.error) {
       console.error('something has gone wrong creating video container');
       return;
     }
@@ -103,12 +103,12 @@ export const VideoExporter = () => {
       console.log('uploading one chunk'); 
       const start = i * chunkSize;
       const data = videoBlob.slice(start, Math.min(start + chunkSize, videoBlob.size));
-      await TiktokApi.uploadVideoChunk(videoContainerUrl.upload_url, data.size, start, videoBlob.size, data);
+      await TiktokApi.uploadVideoChunk(videoContainerUrl.data.upload_url, data.size, start, videoBlob.size, data);
     }
 
     console.log(videoContainerUrl);
     setInterval(async () => {
-      const resp = await ElPatoApi.getVideoStatus(videoContainerUrl.publish_id, auth.token);
+      const resp = await ElPatoApi.getVideoStatus(videoContainerUrl.data.publish_id, auth.token);
       console.log(resp);
     }, 10000);
 

@@ -43,7 +43,7 @@ export interface ChannelSearchResponse {
   profileImg: string
 }
 
-export interface UserDetails {
+export interface ChannelDetails {
   id: string,
   login: string,
   display_name: string,
@@ -87,3 +87,26 @@ export interface CreatorPublishPermissions {
 }
 
 export interface CreatorPublishPermissionResponse extends TikTokResponse<CreatorPublishPermissions> {}
+
+export interface PostVideoPayload {
+  post_info: VideoPostInfo,
+  source_info: VideoSourceInfo
+}
+
+export interface VideoPostInfo {
+  title: string,
+  privacy_level: string,
+  disable_duet: boolean,
+  disable_comment: boolean,
+  disable_stitch: boolean,
+  video_cover_timestamp_ms: number,
+  brand_content_toggle: boolean,
+  brand_organic_toggle: boolean,
+}
+
+export interface VideoSourceInfo {
+  source: 'PULL_FROM_URL' | 'FILE_UPLOAD',
+  video_size: number,
+  chunk_size: number,
+  total_chunk_count: number
+}

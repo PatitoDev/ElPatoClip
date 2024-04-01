@@ -43,7 +43,7 @@ app.get('/user/connection/:connectionType', async (req, res) => {
     if (!userId) return res.status(401).send();
 
     const data = await getAllowedConnectionsHandler(userId, req.params.connectionType);
-    if (!data) return res.status(404);
+    if (!data) return res.status(404).send();
     res.status(200).send(data);
   } catch(err) {
     handleError(err, res);

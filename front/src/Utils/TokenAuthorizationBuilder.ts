@@ -1,6 +1,6 @@
 
 export const createRedirectUrl = (type: 'tiktok' | 'twitch', action : 'auth' | 'connect') => {
-  if (type === 'tiktok') return 'https://clip.elpato.dev';
+  if (type === 'tiktok') return `https://clip.elpato.dev/${action}/${type}`;
   return `${location.origin}/${action}/${type}`;
 };
 
@@ -31,8 +31,7 @@ export const createTokenUrl = (type: 'tiktok' | 'twitch', action: 'auth' | 'conn
       client_key: 'aw68k9974y4f5ymk',
       response_type: 'code',
       // tiktok does not support localhost :/
-      //redirect_uri: `https://clip.elpato.dev/${action}/${type}`,
-      redirect_uri: 'https://clip.elpato.dev',
+      redirect_uri: `https://clip.elpato.dev/${action}/${type}`,
       scope: scopes.join(','),
     };
 

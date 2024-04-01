@@ -48,12 +48,10 @@ export const AuthPage = () => {
         return;
       }
       const resp = await ElPatoApi.createConnection(token, authService, redirectUrl, code);
-      if (!resp) {
-        console.log('error');
+      if (resp.error) {
         setHasError(true);
         return;
       }
-      console.log('success closing window');
       window.close();
     };
 
@@ -61,7 +59,7 @@ export const AuthPage = () => {
       try {
         const resp = await ElPatoApi.authenticate(code, authService, redirectUrl);
 
-        if (!resp) {
+        if (resp.error) {
           setHasError(true);
           setTimeout(() => {
             navigate('/login');
@@ -69,12 +67,11 @@ export const AuthPage = () => {
           return;
         }
 
-        const user = decodeJwt<User>(resp.token);
+        const user = decodeJwt<User>(resp.data.token);
 
-        auth.setUserState({ user, token: resp.token });
-        localStorage.setItem(LOCAL_STORAGE_KEY, resp.token);
+        auth.setUserState({ user, token: resp.data.token });
+        localStorage.setItem(LOCAL_STORAGE_KEY, resp.data.token);
       } catch (e) {
-        console.log(e);
         setTimeout(() => {
           navigate('/login');
         }, 5000);

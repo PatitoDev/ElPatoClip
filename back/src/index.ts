@@ -12,6 +12,13 @@ app.use(cors());
 
 app.use('/', (req, _, next) => {
   console.log(`[${req.method}] - ${req.path}`);
+  if (Object.keys(req.query).length > 0) {
+    console.log('query:', req.query);
+  }
+
+  if (Object.keys(req.body).length > 0) {
+    console.log('body:', req.body.code ? {...req.body, code: '***'} : req.body);
+  }
   next();
 });
 
