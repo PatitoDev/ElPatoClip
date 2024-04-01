@@ -1,7 +1,5 @@
 import * as S from './styles';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Layer, TimeSlice } from '../../../../types';
-import { useVideo } from '../useVideo';
+import { useCallback, useEffect, useRef } from 'react';
 import { useRenderLoop } from '../../../../hooks/useRenderLoop';
 import { VideoCanvas } from '../../../Molecules/Editor/VideoCanvas';
 import { useCanvasRecording } from './useCanvasRecording';
@@ -11,25 +9,28 @@ import { ElPatoApi } from '../../../../api/elPatoClipApi';
 import { useAuth } from '../../../../authContext/useAuth';
 import { TikTokPublishFormData, TiktokPublishForm } from './TiktokPublishForm';
 import { Button } from '../../../Atoms/Button';
+import { useEditorState } from '../../../../store/EditorState/useEditorState';
 
-export interface VideoExporterProps {
-  videoUrl: string,
-  layers: Array<Layer>,
-  timeSlice: TimeSlice
-}
+export const VideoExporter = () => {
+  const resetInteractions = useEditorState((state) => state.resetInteractions);
+  const videoBlobUrl = useEditorState((state) => state.videoBlobUrl);
+  const timeSlice = useEditorState((state) => state.timeSlice);
 
-export const VideoExporter = ({
-  layers,
-  timeSlice,
-  videoUrl
-}: VideoExporterProps) => {
   const auth = useAuth();
   const outputCanvasRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { seekTo, setPlayback } = useVideo(videoRef, timeSlice);
+  const { seekTo, setPlayback, setVideoRef } = useEditorState();
 
   const { outputUrl, record } = useCanvasRecording(outputCanvasRef, videoRef);
+
+  useEffect(() => {
+    resetInteractions();
+  }, [resetInteractions]);
+
+  useEffect(() => {
+    setVideoRef(videoRef);
+  }, [videoRef, setVideoRef]);
 
   useEventListener<HTMLVideoElement, Event>(videoRef, 'loadeddata', () => {
     seekTo(timeSlice.startTime);
@@ -58,13 +59,6 @@ export const VideoExporter = ({
     if (!outputUrl) return;
     setPlayback(false);
   }, [outputUrl, setPlayback]);
-
-  const renderLayers: Array<Layer> = useMemo(() => layers.map((item) => ({
-    ...item,
-    locked: true,
-    output: item.output,
-    input: item.input
-  })), [layers]);
 
   const upload = useCallback(async (formData: TikTokPublishFormData) => {
     if (!outputUrl) return;
@@ -120,6 +114,8 @@ export const VideoExporter = ({
 
   }, [auth, outputUrl]);
 
+  if (!videoBlobUrl) return null;
+
   return (
     <S.Container>
       <S.VideoContainer>
@@ -130,17 +126,14 @@ export const VideoExporter = ({
             withPadding={false}
             ref={outputCanvasRef}
             direction='portrait'
-            hoverLayerId={null}
-            selectedLayerId={null}
-            setHoverLayerId={() => {}}
-            setSelectedLayerId={() => {}}
-            layers={renderLayers}
             videoRef={canvasRef}
+            type='output'
+            locked
           />
         )}
       </S.VideoContainer>
       <canvas hidden ref={canvasRef} width={1920} height={1080} />
-      <video hidden ref={videoRef} src={videoUrl} width={1920} height={1080} />
+      <video preload='auto' hidden ref={videoRef} src={videoBlobUrl} width={1920} height={1080} />
 
       <S.RightContainer>
         { outputUrl && (

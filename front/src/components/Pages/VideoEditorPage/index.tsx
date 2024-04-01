@@ -3,10 +3,9 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ElPatoApi } from '../../../api/elPatoClipApi';
 import { Loading } from '../../Atoms/Loading';
-import { Layer, TimeSlice } from '../../../types';
-import { defaultLayers } from '../../../Utils/LayerGenerator';
 import { VideoExporter } from './VideoExporter';
 import VideoEditor from '../../Organisms/Editor';
+import { useEditorState } from '../../../store/EditorState/useEditorState';
 
 const bytesToReadable = (amount: number) => {
   if (amount > 1000000) {
@@ -19,14 +18,13 @@ const bytesToReadable = (amount: number) => {
 };
 
 export const VideoEditorPage = () => {
+  const videoBlobUrl = useEditorState((state) => state.videoBlobUrl);
+  const setClipId = useEditorState((state) => state.setClipId);
+
   const [isExporting, setIsExporting] = useState<boolean>(false);
-  const [layers, setLayers] = useState<Array<Layer>>(defaultLayers);
-  // todo - get default crop time from response
-  const [cropTime, setCropTime] = useState<TimeSlice>({ startTime: 0, endTime: 10 });
 
   const { clipId } = useParams<{ clipId: string }>(); 
   const [loading, setIsLoading] = useState<boolean>(false);
-  const [urlBlob, setUrlBlob] = useState<string | null>(null);
   const [progress, setProgress] = useState<{
     amount: string,
     total: string
@@ -35,6 +33,20 @@ export const VideoEditorPage = () => {
   useEffect(() => {
     if (!clipId) return;
     const onClipDownload = async (clipId: string) => {
+      const storageKey = 'ElPatoClip.CachedVideo';
+
+      /*
+      const cache = localStorage.getItem(storageKey);
+      if (cache) {
+        const cacheBlob = JSON.parse(cache);
+        if (cacheBlob['id'] === clipId) {
+          console.log('loaded from cache');
+          setClipId(clipId, cacheBlob['blobUrl']);
+          return;
+        }
+      }
+      */
+
       setIsLoading(true);
       // get clip metadata
       const blob = await ElPatoApi.getClip(clipId, (amount, total) => {
@@ -46,12 +58,17 @@ export const VideoEditorPage = () => {
           total: totalStr
         });
       });
-      setUrlBlob(URL.createObjectURL(blob));
+      const blobUrl = URL.createObjectURL(blob);
+      setClipId(clipId, blobUrl);
       setIsLoading(false);
       setProgress(null);
+      localStorage.setItem(storageKey, JSON.stringify({
+        id: clipId,
+        blobUrl
+      }));
     };
     onClipDownload(clipId);
-  },[clipId]);
+  },[setClipId, clipId]);
 
   if (loading) return (
     <S.LoadingVideoContainer>
@@ -63,25 +80,15 @@ export const VideoEditorPage = () => {
     </S.LoadingVideoContainer>
   );
 
-  if (isExporting && urlBlob) {
+  if (isExporting && videoBlobUrl) {
     return (
-      <VideoExporter
-        videoUrl={urlBlob}
-        layers={layers}
-        timeSlice={cropTime}
-      />
+      <VideoExporter />
     );
   }
 
-  if (urlBlob) {
+  if (videoBlobUrl) {
     return (
-      <VideoEditor 
-        videoUrl={urlBlob}
-        cropTime={cropTime}
-        layers={layers}
-        setCropTime={setCropTime}
-        setLayers={setLayers}
-        onExport={() => setIsExporting(true)}
+      <VideoEditor onExport={() => setIsExporting(true)}
       />
     );
   }
