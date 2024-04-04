@@ -54,16 +54,32 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, [navigate]);
 
   useEffect(() => {
-    setIsLoading(true);
-    // load from local storage
-    const token = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!token) {
+    const loadToken = () => {
+      setIsLoading(true);
+      // load from local storage
+      const token = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+      const user = decodeJwt<User>(token);
+      setState({ token, user });
       setIsLoading(false);
-      return;
-    }
-    const user = decodeJwt<User>(token);
-    setState({ token, user });
-    setIsLoading(false);
+    };
+
+    const onStorageChange = (e: StorageEvent) => {
+      if (e.key !== LOCAL_STORAGE_KEY) return;
+      loadToken();
+    };
+
+    window.addEventListener('storage', onStorageChange);
+
+    loadToken();
+
+    return () => {
+      window.removeEventListener('storage', onStorageChange);
+    };
+
   }, []);
 
   const exposedState: UserContextState = state ? {

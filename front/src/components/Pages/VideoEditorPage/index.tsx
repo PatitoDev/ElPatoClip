@@ -21,8 +21,8 @@ export const VideoEditorPage = () => {
   const [hasError, setHasError] = useState<boolean>(false);
   const videoBlobUrl = useEditorState((state) => state.videoBlobUrl);
   const setClipId = useEditorState((state) => state.setClipId);
-
-  const [isExporting, setIsExporting] = useState<boolean>(false);
+  const isExporting = useEditorState((state) => state.isExporting);
+  const setIsExporting = useEditorState((state) => state.setIsExporting);
 
   const { clipId } = useParams<{ clipId: string }>(); 
   const [loading, setIsLoading] = useState<boolean>(false);

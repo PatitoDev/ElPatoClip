@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import * as S from './styles';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../../authContext/useAuth';
 import { Button } from '../../Atoms/Button';
 
@@ -29,6 +29,11 @@ const MainTemplate = (props: MainTemplateProps) => {
       document.body.classList.remove('menu-open');
     }
   }, [isNavOpen]);
+
+  const onLoginClick = useCallback(() => {
+    const url = `${location.origin}/login`;
+    window.open(url, 'popup', 'toolbar=0,status=0,width=626,height=636');
+  }, []);
 
   return (
     <>
@@ -65,7 +70,7 @@ const MainTemplate = (props: MainTemplateProps) => {
                   <Button $variant="outline" onClick={auth.logOut}>Logout</Button>
                 </>
               ) : (
-                <Link to="/login">Login</Link>
+                <Button $variant='outline' onClick={onLoginClick}>Login</Button>
               )}
             </S.Links>
 

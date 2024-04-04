@@ -1,6 +1,6 @@
 import { ApiResponse } from '../types';
 import { readBlob } from './responseReaders';
-import { ChannelDetails, ChannelSearchResponse, ClipListRequestFilters, ClipsResponse, CreatorPublishPermissionResponse, ElPatoConnection, PostVideoPayload } from './types';
+import { ChannelDetails, ChannelSearchResponse, ClipListRequestFilters, ClipsResponse, CreatorPublishPermissionResponse, ElPatoConnection, PostVideoPayload, TikTokResponse } from './types';
 
 const baseApi = import.meta.env.MODE === 'production' ?  'https://api.niv3kelpato.com/clipApi/' : 'http://localhost:3000/';
 
@@ -80,16 +80,63 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<ApiR
   }
 };
 
-const initiateVideo = async (payload: PostVideoPayload, token: string) => (
-  await request<{ publish_id: string, upload_url: string }>(`${baseApi}tiktok/initiate-upload`, {
+export type InitiateTikTokVideoResult = {
+  error: string,
+  data: null
+} | {
+  error: null,
+  data: {
+    publish_id: string,
+    upload_url: string
+  }
+}
+
+const initiateVideo = async (payload: PostVideoPayload, token: string): Promise<InitiateTikTokVideoResult> => {
+  const resp = await fetch(`${baseApi}tiktok/initiate-upload`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(payload)
-  })
-);
+  });
+
+  if (resp.status === 500) return ({
+    data: null,
+    error: 'Unable to create video. Try again later.'
+  });
+
+  const result = await resp.json() as TikTokResponse<{
+    publish_id: string,
+    upload_url: string
+  }>;
+
+  const tiktokErrorMap: Record<string, string> = {
+    invalid_param: 'Invalid data',
+    spam_risk_too_many_posts: 'You have reached your daily post cap. Please wait 24 hours before posting again',
+    spam_risk_user_banned_from_posting: 'This account has been banned from making new posts',
+    reached_active_user_cap: 'Application has reached post cap. Please wait 24 hours before posting.',
+    unaudited_client_can_only_post_to_private_accounts: 'Please change your tiktok account privacy settings to private',
+    url_ownership_unverified: 'Unhandled error',
+    privacy_level_option_mismatch: 'Data mismatch. Please refresh the page and try again',
+    access_token_invalid: 'Invalid access, please reload and try again',
+    scope_not_authorized: 'Invalid access, please reload and try again',
+    rate_limit_exceeded: 'Application has reached post cap. Please wait 24 hours before posting.',
+  };
+
+  if (result.error.code === 'ok') {
+    return {
+      data: result.data,
+      error: null
+    };
+  }
+
+  return {
+    data: null,
+    error: tiktokErrorMap[result.error.code] ?? 'Unable to create tiktok video. Please try again later'
+  };
+
+};
 
 // TODO - type this
 const getVideoStatus = async (videoId: string, token: string) => {

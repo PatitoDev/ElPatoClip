@@ -23,4 +23,19 @@ export const RightContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2em;
+  width: 40em;
+`;
+
+export const ExportingLoaderContainer = styled.div`
+  background-color: #151515;
+  border-radius: 17px;
+  padding: 2em;
+
+  font-size: 1.5em;
+  font-weight: 500;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10em;
 `;

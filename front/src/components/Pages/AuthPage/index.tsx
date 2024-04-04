@@ -2,8 +2,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Loading } from '../../Atoms/Loading';
 import { useEffect, useState } from 'react';
 import { ElPatoApi } from '../../../api/elPatoClipApi';
-import { decodeJwt } from 'jose';
-import { LOCAL_STORAGE_KEY, User } from '../../../authContext';
+import { LOCAL_STORAGE_KEY } from '../../../authContext';
 import { useAuth } from '../../../authContext/useAuth';
 import styled from 'styled-components';
 import { createRedirectUrl } from '../../../Utils/TokenAuthorizationBuilder';
@@ -17,8 +16,9 @@ const Container = styled.section`
 
 export const AuthPage = () => {
   const auth = useAuth();
-  const [hasError, setHasError] = useState<boolean>(false);
   const navigate = useNavigate();
+  const [ success, setSuccess ] = useState<boolean>(false);
+  const [ hasError, setHasError ] = useState<boolean>(false);
   const { authService, action } = useParams<{ authService: string, action: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -28,16 +28,23 @@ export const AuthPage = () => {
   if (action !== 'auth' &&
       action !== 'connect') throw new Error('invalid action');
 
-  useEffect(() => {
-    if (!auth?.isAuthorized || auth.isLoading || action === 'connect') return;
-    navigate('/');
-  }, [auth, navigate, action]);
+  const closeWindow = () => {
+    window.setTimeout(() => {
+      window.close();
+    }, 500);
+  };
 
   useEffect(() => {
-    if (auth.isLoading) return;
-    if (action === 'auth' && auth.isAuthorized) return;
     const code = searchParams.get('code');
-    if (!code) { return; }
+    if (!code) return;
+
+    if (auth.isLoading) return;
+    if (action === 'auth' && auth.isAuthorized) {
+      setSuccess(true);
+      closeWindow();
+      return;
+    }
+
     setSearchParams('');
 
     const redirectUrl = createRedirectUrl(authService, action);
@@ -45,6 +52,7 @@ export const AuthPage = () => {
     const connectUser = async () => {
       const token = auth.token;
       if (!token) {
+        setHasError(true);
         return;
       }
       const resp = await ElPatoApi.createConnection(token, authService, redirectUrl, code);
@@ -52,29 +60,24 @@ export const AuthPage = () => {
         setHasError(true);
         return;
       }
-      window.close();
+
+      setSuccess(true);
+      closeWindow();
     };
 
-    const getUserInfo = async () => {
+    const authenticate = async () => {
       try {
         const resp = await ElPatoApi.authenticate(code, authService, redirectUrl);
 
         if (resp.error) {
           setHasError(true);
-          setTimeout(() => {
-            navigate('/login');
-          }, 5000);
           return;
         }
 
-        const user = decodeJwt<User>(resp.data.token);
-
-        auth.setUserState({ user, token: resp.data.token });
         localStorage.setItem(LOCAL_STORAGE_KEY, resp.data.token);
+        setSuccess(true);
+        closeWindow();
       } catch (e) {
-        setTimeout(() => {
-          navigate('/login');
-        }, 5000);
         setHasError(true);
       }
     };
@@ -85,7 +88,7 @@ export const AuthPage = () => {
     }
 
     if (action === 'auth') {
-      getUserInfo();
+      authenticate();
     }
   }, [auth, authService, navigate, searchParams, setSearchParams, action]);
 
@@ -98,9 +101,13 @@ export const AuthPage = () => {
     </Container>
   );
 
+  if (success) return (
+    <Container>Logged in</Container>
+  );
+
   if (hasError) return (
     <Container>
-      <h1>Error authenticating, redirecting in 5 seconds</h1>
+      <h1>Error authenticating, please try again later</h1>
     </Container>
   );
 

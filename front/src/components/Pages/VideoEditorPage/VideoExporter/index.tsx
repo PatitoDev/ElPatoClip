@@ -4,19 +4,15 @@ import { useRenderLoop } from '../../../../hooks/useRenderLoop';
 import { VideoCanvas } from '../../../Molecules/Editor/VideoCanvas';
 import { useCanvasRecording } from './useCanvasRecording';
 import { useEventListener } from '../../../../hooks/useEventListener';
-import { TiktokApi } from '../../../../api/tiktokApi';
-import { ElPatoApi } from '../../../../api/elPatoClipApi';
-import { useAuth } from '../../../../authContext/useAuth';
-import { TikTokPublishFormData, TiktokPublishForm } from './TiktokPublishForm';
-import { Button } from '../../../Atoms/Button';
 import { useEditorState } from '../../../../store/EditorState/useEditorState';
+import { ExportSection } from './ExportSection';
+import { Loading } from '../../../Atoms/Loading';
 
 export const VideoExporter = () => {
   const resetInteractions = useEditorState((state) => state.resetInteractions);
   const videoBlobUrl = useEditorState((state) => state.videoBlobUrl);
   const timeSlice = useEditorState((state) => state.timeSlice);
 
-  const auth = useAuth();
   const outputCanvasRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -47,72 +43,10 @@ export const VideoExporter = () => {
     ctx.drawImage(videoRef.current, 0, 0);
   }, []));
 
-  const download = useCallback((blobUrl: string) => {
-    const a = document.createElement('a');
-    document.body.appendChild(a);
-    a.href = blobUrl;
-    a.download = 'test.webm';
-    a.click();
-  }, []);
-
   useEffect(() => {
     if (!outputUrl) return;
     setPlayback(false);
   }, [outputUrl, setPlayback]);
-
-  const upload = useCallback(async (formData: TikTokPublishFormData) => {
-    if (!outputUrl) return;
-    if (!auth.isAuthorized) return;
-    console.log('uploading...');
-    const videoBlob = await (await fetch(outputUrl)).blob();
-    // todo - break it into chunks correctly
-    const chunkAmount = 1; // Math.ceil(videoBlob.size / 6000000);
-    const chunkSize = videoBlob.size;//Math.ceil(videoBlob.size / chunkAmount);
-
-    console.log({
-      size: videoBlob.size,
-      chunkSize,
-      chunkAmount
-    });
-
-    const videoContainerUrl = await ElPatoApi.initiateVideo({
-      post_info: {
-        brand_content_toggle: false,
-        brand_organic_toggle: false,
-        disable_comment: formData.allowComment,
-        disable_duet: formData.allowDuet,
-        disable_stitch: formData.allowStitch,
-        privacy_level: formData.privacy,
-        title: formData.title,
-        video_cover_timestamp_ms: 100
-      }, 
-      source_info: {
-        chunk_size: chunkSize,
-        video_size: videoBlob.size,
-        source: 'FILE_UPLOAD',
-        total_chunk_count: chunkAmount
-      }
-    }, auth.token);
-
-    if (videoContainerUrl.error) {
-      console.error('something has gone wrong creating video container');
-      return;
-    }
-
-    for (let i = 0; i < chunkAmount; i++) {
-      console.log('uploading one chunk'); 
-      const start = i * chunkSize;
-      const data = videoBlob.slice(start, Math.min(start + chunkSize, videoBlob.size));
-      await TiktokApi.uploadVideoChunk(videoContainerUrl.data.upload_url, data.size, start, videoBlob.size, data);
-    }
-
-    console.log(videoContainerUrl);
-    setInterval(async () => {
-      const resp = await ElPatoApi.getVideoStatus(videoContainerUrl.data.publish_id, auth.token);
-      console.log(resp);
-    }, 10000);
-
-  }, [auth, outputUrl]);
 
   if (!videoBlobUrl) return null;
 
@@ -136,11 +70,14 @@ export const VideoExporter = () => {
       <video preload='auto' hidden ref={videoRef} src={videoBlobUrl} width={1920} height={1080} />
 
       <S.RightContainer>
-        { outputUrl && (
-          <>
-            <TiktokPublishForm onSubmit={upload} />
-            <Button $variant='white' onClick={() => download(outputUrl)}>Download</Button>
-          </>
+
+        { outputUrl ?  (
+          <ExportSection videoUrl={outputUrl} />
+        ) : (
+          <S.ExportingLoaderContainer>
+            <p>Recording video...</p>
+            <Loading />
+          </S.ExportingLoaderContainer>
         )}
 
       </S.RightContainer>

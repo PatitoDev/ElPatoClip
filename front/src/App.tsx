@@ -36,14 +36,14 @@ const router = createBrowserRouter([
   {
     path: '/login',
     element: 
-      <Template>
+      <Template withHeader={false} >
         <LoginPage />
       </Template>
   },
   {
     path: '/:action/:authService',
     element:
-      <Template>
+      <Template withHeader={false} >
         <AuthPage />
       </Template>
   },

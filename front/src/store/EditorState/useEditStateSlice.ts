@@ -28,7 +28,9 @@ export interface VideoEditSlice {
   updateLayerPartially: (id: number, layer: Partial<Layer>) => void,
   setVideoCurrentTime: (time: number) => void,
   setVideoTotalTime: (time: number) => void,
-  resetInteractions: () => void
+  resetInteractions: () => void,
+  isExporting: boolean,
+  setIsExporting: (value: boolean) => void,
 }
 
 export const useEditStateSlice:StateCreator<
@@ -116,5 +118,7 @@ export const useEditStateSlice:StateCreator<
       selectedLayer: null,
       hoveredLayer: null,
     }));
-  }
+  },
+  isExporting: false,
+  setIsExporting: (value) => set(() => ({ isExporting: value }))
 });

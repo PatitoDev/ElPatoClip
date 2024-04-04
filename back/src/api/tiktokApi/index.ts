@@ -6,7 +6,6 @@ import { CreatorPublishPermissionResponse, PostVideoRequest } from './types';
  */
 const initiateVideo = async (postOptions: PostVideoRequest, token: string) => {
   const url = 'https://open.tiktokapis.com/v2/post/publish/video/init/';
-  console.log(postOptions);
 
   const resp = await fetch(url, {
     method: 'POST',
@@ -29,12 +28,10 @@ const initiateVideo = async (postOptions: PostVideoRequest, token: string) => {
     }
   };
 
-  if (data.error.code !== 'ok') {
-    console.error(data);
-    return;
-  }
-
-  return data.data;
+  return {
+    payload: data,
+    status: resp.status
+  };
 };
 
 export interface StatusResponse {

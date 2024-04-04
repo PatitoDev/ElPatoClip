@@ -15,7 +15,7 @@ app.post('/tiktok/initiate-upload', async (req, res) => {
     const result = await initiateVideoUploadHandler(videoData, userId);
     if (!result) return res.status(500).send('Unable to create video');
 
-    return res.status(200).send(result);
+    return res.status(result.status).send(result.payload);
   } catch (e) {
     handleError(e, res);
   }
