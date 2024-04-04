@@ -88,6 +88,15 @@ export interface CreatorPublishPermissions {
 
 export interface CreatorPublishPermissionResponse extends TikTokResponse<CreatorPublishPermissions> {}
 
+export interface TiktokUploadStatus {
+  status: 'FAILED' | 'PROCESSING_UPLOAD' | 'PROCESSING_DOWNLOAD' | 'SEND_TO_USER_INBOX' | 'PUBLISH_COMPLETE' | 'FAILED',
+  fail_reason: string,
+  publicaly_available_post_id: Array<number>,
+  uploaded_bytes: number
+}
+
+export interface TiktokUploadStatusResponse extends TikTokResponse<TiktokUploadStatus> {}
+
 export interface PostVideoPayload {
   post_info: VideoPostInfo,
   source_info: VideoSourceInfo

@@ -8,7 +8,7 @@ import { postConnectionHandler } from './handlers/postConnectionHandler';
 
 app.post('/user/connection/:connectionType', async (req, res) => {
   try {
-    const userId = getUserIdFromToken(req.headers);
+    const userId = await getUserIdFromToken(req.headers);
     if (!userId) return res.status(401).send();
 
     const connectionType = z.nativeEnum(ConnectionServices).parse(req.params.connectionType);
@@ -26,7 +26,7 @@ app.post('/user/connection/:connectionType', async (req, res) => {
 
 app.delete('/user/connection/:connectionType', async (req, res) => {
   try {
-    const userId = getUserIdFromToken(req.headers);
+    const userId = await getUserIdFromToken(req.headers);
     if (!userId) return res.status(401).send();
     const connectionType = z.nativeEnum(ConnectionServices).parse(req.params.connectionType);
 
@@ -39,7 +39,7 @@ app.delete('/user/connection/:connectionType', async (req, res) => {
 
 app.get('/user/connection/:connectionType', async (req, res) => {
   try {
-    const userId = getUserIdFromToken(req.headers);
+    const userId = await getUserIdFromToken(req.headers);
     if (!userId) return res.status(401).send();
 
     const data = await getAllowedConnectionsHandler(userId, req.params.connectionType);

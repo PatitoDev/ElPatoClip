@@ -82,3 +82,18 @@ export interface VideoObject {
   share_count: number,
   view_count: number,
 }
+
+export interface StatusResponse {
+  data: {
+    status: 'FAILED' | 'PROCESSING_UPLOAD' | 'PROCESSING_DOWNLOAD' | 'SEND_TO_USER_INBOX' | 'PUBLISH_COMPLETE' | 'FAILED',
+    fail_reason: string,
+    publicaly_available_post_id: Array<number>,
+    uploaded_bytes: number
+  },
+  error: {
+    code: string,
+    message: string,
+    log_id: string
+  }
+}
+

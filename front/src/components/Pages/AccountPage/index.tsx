@@ -14,7 +14,7 @@ export const AccountPage = () => {
     if (auth.isLoading) return;
 
     if (!auth.isAuthorized) {
-      navigate('/login');
+      navigate('/');
       return;
     }
   }, [auth, navigate]);

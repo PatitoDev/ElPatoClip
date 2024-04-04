@@ -1,6 +1,7 @@
 import { createContext, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { decodeJwt } from 'jose';
+import { ElPatoApi } from '../api/elPatoClipApi';
 
 
 export type UserContextState = {
@@ -54,11 +55,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, [navigate]);
 
   useEffect(() => {
-    const loadToken = () => {
+    const loadToken = async () => {
       setIsLoading(true);
       // load from local storage
       const token = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      const isValid = await ElPatoApi.validateToken(token);
+      if (!isValid) {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
         setIsLoading(false);
         return;
       }
@@ -67,9 +75,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(false);
     };
 
-    const onStorageChange = (e: StorageEvent) => {
+    const onStorageChange = async (e: StorageEvent) => {
       if (e.key !== LOCAL_STORAGE_KEY) return;
-      loadToken();
+      await loadToken();
     };
 
     window.addEventListener('storage', onStorageChange);

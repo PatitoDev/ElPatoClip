@@ -1,8 +1,44 @@
+import { AuthorizationError } from '../AuthorizationError';
 import { ApiResponse } from '../types';
+import { tiktokErrorMap, tiktokVideoUploadStatusErrorMap } from './errorMappers';
 import { readBlob } from './responseReaders';
-import { ChannelDetails, ChannelSearchResponse, ClipListRequestFilters, ClipsResponse, CreatorPublishPermissionResponse, ElPatoConnection, PostVideoPayload, TikTokResponse } from './types';
+import { ChannelDetails, ChannelSearchResponse, ClipListRequestFilters, ClipsResponse, CreatorPublishPermissionResponse, ElPatoConnection, PostVideoPayload, TikTokResponse, TiktokUploadStatusResponse } from './types';
 
 const baseApi = import.meta.env.MODE === 'production' ?  'https://api.niv3kelpato.com/clipApi/' : 'http://localhost:3000/';
+
+const request = async <T>(path: string, options: RequestInit = {}): Promise<ApiResponse<T>> => {
+  try {
+
+    const resp = await fetch(path, options);
+
+    if (resp.status === 401 || resp.status === 403) {
+      throw new AuthorizationError();
+    }
+
+    if (!resp.ok)
+      return { error: true, status: resp.status, data: null };
+
+    try {
+      return {
+        data: await resp.json(),
+        error: false,
+        status: resp.status
+      };
+    } catch {
+      return {
+        data: null as T,
+        error: false,
+        status: resp.status
+      };
+    }
+  } catch {
+    return {
+      data: null,
+      error: true,
+      status: 500
+    };
+  }
+};
 
 const searchUser = async (searchString: string) => (
   await request<Array<ChannelSearchResponse>>(`${baseApi}channels?search=${searchString}`)
@@ -35,7 +71,6 @@ const getClip = async (clipId: string, onProgress: (progress: number, total:numb
   }
 };
 
-
 const authenticate = async (code: string, provider: string, redirectUrl: string) => (
   await request<{ token: string }>(`${baseApi}login`, {
     method: 'POST',
@@ -49,109 +84,6 @@ const authenticate = async (code: string, provider: string, redirectUrl: string)
     })
   })
 );
-
-const request = async <T>(path: string, options: RequestInit = {}): Promise<ApiResponse<T>> => {
-  try {
-
-    const resp = await fetch(path, options);
-
-    if (!resp.ok)
-      return { error: true, status: resp.status, data: null };
-
-    try {
-      return {
-        data: await resp.json(),
-        error: false,
-        status: resp.status
-      };
-    } catch {
-      return {
-        data: null as T,
-        error: false,
-        status: resp.status
-      };
-    }
-  } catch {
-    return {
-      data: null,
-      error: true,
-      status: 500
-    };
-  }
-};
-
-export type InitiateTikTokVideoResult = {
-  error: string,
-  data: null
-} | {
-  error: null,
-  data: {
-    publish_id: string,
-    upload_url: string
-  }
-}
-
-const initiateVideo = async (payload: PostVideoPayload, token: string): Promise<InitiateTikTokVideoResult> => {
-  const resp = await fetch(`${baseApi}tiktok/initiate-upload`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload)
-  });
-
-  if (resp.status === 500) return ({
-    data: null,
-    error: 'Unable to create video. Try again later.'
-  });
-
-  const result = await resp.json() as TikTokResponse<{
-    publish_id: string,
-    upload_url: string
-  }>;
-
-  const tiktokErrorMap: Record<string, string> = {
-    invalid_param: 'Invalid data',
-    spam_risk_too_many_posts: 'You have reached your daily post cap. Please wait 24 hours before posting again',
-    spam_risk_user_banned_from_posting: 'This account has been banned from making new posts',
-    reached_active_user_cap: 'Application has reached post cap. Please wait 24 hours before posting.',
-    unaudited_client_can_only_post_to_private_accounts: 'Please change your tiktok account privacy settings to private',
-    url_ownership_unverified: 'Unhandled error',
-    privacy_level_option_mismatch: 'Data mismatch. Please refresh the page and try again',
-    access_token_invalid: 'Invalid access, please reload and try again',
-    scope_not_authorized: 'Invalid access, please reload and try again',
-    rate_limit_exceeded: 'Application has reached post cap. Please wait 24 hours before posting.',
-  };
-
-  if (result.error.code === 'ok') {
-    return {
-      data: result.data,
-      error: null
-    };
-  }
-
-  return {
-    data: null,
-    error: tiktokErrorMap[result.error.code] ?? 'Unable to create tiktok video. Please try again later'
-  };
-
-};
-
-// TODO - type this
-const getVideoStatus = async (videoId: string, token: string) => {
-  const resp = await fetch(`${baseApi}tiktok/video/status`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      id: videoId
-    })
-  });
-  return await resp.json();
-};
 
 const getConnectionDetails = async (token: string, connectionType: string) => (
   await request<ElPatoConnection>(`${baseApi}user/connection/${connectionType}`, {
@@ -194,6 +126,100 @@ const getTiktokCreatorPermissions = async (token: string) => (
   })
 );
 
+// not using request helper
+const getVideoStatus = async (videoId: string, token: string) => {
+  try {
+    const resp = await fetch(`${baseApi}tiktok/video/status`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        id: videoId
+      })
+    });
+    const { data, error } = await resp.json() as TiktokUploadStatusResponse;
+
+    if (error.code === 'ok') {
+      console.log(data);
+      return {
+        success: data.publicaly_available_post_id
+      };
+    }
+
+    return {
+      error: tiktokVideoUploadStatusErrorMap[error.code]
+    };
+
+  } catch {
+    return {
+      error: 'Unable to verify upload success. Please check your tiktok account.'
+    };
+  }
+};
+
+export type InitiateTikTokVideoResult = {
+  error: string,
+  data: null
+} | {
+  error: null,
+  data: {
+    publish_id: string,
+    upload_url: string
+  }
+}
+
+const initiateVideo = async (payload: PostVideoPayload, token: string): Promise<InitiateTikTokVideoResult> => {
+  const resp = await fetch(`${baseApi}tiktok/initiate-upload`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (resp.status === 500) return ({
+    data: null,
+    error: 'Unable to create video. Try again later.'
+  });
+
+  if (resp.status === 401 || resp.status === 403) {
+    return {
+      data: null,
+      error: 'User is not authenticated or the tiktok connection has been invalidated. Reload and try again.'
+    };
+  }
+
+  const result = await resp.json() as TikTokResponse<{
+    publish_id: string,
+    upload_url: string
+  }>;
+
+  if (result.error.code === 'ok') {
+    return {
+      data: result.data,
+      error: null
+    };
+  }
+
+  return {
+    data: null,
+    error: tiktokErrorMap[result.error.code] ?? 'Unable to create tiktok video. Please try again later'
+  };
+};
+
+const validateToken = async (token: string) => {
+  const resp =  await fetch(`${baseApi}token/verify`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return resp.ok;
+};
+
 export const ElPatoApi = {
   getClips,
   getClip,
@@ -205,5 +231,6 @@ export const ElPatoApi = {
   getConnectionDetails,
   createConnection,
   deleteConnection,
-  getTiktokCreatorPermissions
+  getTiktokCreatorPermissions,
+  validateToken
 };

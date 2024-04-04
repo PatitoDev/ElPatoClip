@@ -200,15 +200,31 @@ export const TiktokPublishForm = ({
       steps: { create: 'completed', upload: 'completed', verify: 'progress' }
     });
 
-    setTimeout(async () => {
-      // todo - type this
+    const getUploadStatus = async () => {
       const resp = await ElPatoApi.getVideoStatus(publishId, auth.token);
-      console.log(resp);
+      if (resp.error) {
+        setUploadProgress(prev => ({
+          ...prev,
+          error: resp.error,
+          steps: { ...prev.steps, verify: 'error' }
+        }));
+        return false;
+      }
       setUploadProgress({
         amount: 100,
         steps: { create: 'completed', upload: 'completed', verify: 'completed' }
       });
-    }, 10000);
+      return true;
+    };
+
+    const startTimeout = () => {
+      setTimeout(async () => {
+        const success = await getUploadStatus();
+        if (success) return;
+        startTimeout();
+      }, 1000);
+    };
+    startTimeout();
 
   }, [auth, videoUrl, formData]);
 

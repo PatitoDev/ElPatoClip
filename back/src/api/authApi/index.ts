@@ -27,7 +27,7 @@ export const authenticate = async (code: string, service: LoginServices, redirec
   }
 };
 
-export const verifyToken = async (token: string) => {
+export const verifyTokenApi = async (token: string) => {
   const resp = await fetch(BASE_URL + '/token/verify', {
     method: 'POST',
     headers: {

@@ -34,20 +34,6 @@ const initiateVideo = async (postOptions: PostVideoRequest, token: string) => {
   };
 };
 
-export interface StatusResponse {
-  data: {
-    status: 'FAILED' | 'PROCESSING_UPLOAD' | 'PROCESSING_DOWNLOAD' | 'SEND_TO_USER_INBOX' | 'PUBLISH_COMPLETE' | 'FAILED',
-    fail_reason: string,
-    publicaly_available_post_id: Array<number>,
-    uploaded_bytes: number
-  },
-  error: {
-    code: string,
-    message: string,
-    log_id: string
-  }
-}
-
 const getUploadStatus = async (videoId: string, token: string) => {
   const url = 'https://open.tiktokapis.com/v2/post/publish/status/fetch/';
   const resp = await fetch(url, {
@@ -61,8 +47,8 @@ const getUploadStatus = async (videoId: string, token: string) => {
     })
   });
 
-  return await resp.json() as StatusResponse;
-}; 
+  return resp;
+};
 
 const getCreatorPermissions = async (token: string) => {
   const url = 'https://open.tiktokapis.com/v2/post/publish/creator_info/query/';
