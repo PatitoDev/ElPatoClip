@@ -1,5 +1,7 @@
-const BASE_URL = 'http://localhost:8022';
-const APP_ID = 'elpatoclip';
+import { env } from '../../env';
+
+const BASE_URL = `http://localhost:${env.authPort}`;
+const APP_ID = env.appName;
 
 export enum LoginServices {
   tiktok = 'tiktok',
