@@ -24,7 +24,7 @@ export const LayerButtonContainer = styled.div<{ $selected?: boolean }>`
   position: relative;
   border: none;
   background-color: transparent;
-  padding: 1em;
+  padding: 0.5em 1em;
   display: flex;
   justify-content: space-between;
   align-items: center;

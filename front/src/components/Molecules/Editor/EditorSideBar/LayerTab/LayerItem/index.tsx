@@ -111,6 +111,14 @@ export const LayerItem = ({
     setIsEditingName(true);
   };
 
+  const onDeleteButtonClicked = (
+    e:React.MouseEvent<HTMLButtonElement, MouseEvent>, layer: Layer
+  ) => {
+    e.stopPropagation();
+    setLayers(layers.filter(l => l.id !== layer.id));
+    setSelectedLayer(null);
+  };
+
   const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
     if (!isEditingName) return;
     if (['Escape', 'Enter'].includes(e.key)) {
@@ -140,6 +148,7 @@ export const LayerItem = ({
         onClick={onLayerClick} 
       />
       <div>
+        <img width={25} src="/icons/MingcuteDotsLine.svg"></img>
         <S.InputColor 
           onClick={() => setSelectedLayer(layer.id)}
           onChange={(e) => updateLayerPartially(layer.id, { borderColor: e.target.value })} 
@@ -168,6 +177,10 @@ export const LayerItem = ({
               'MingcuteLockLine.svg' :
               'MingcuteUnlockLine.svg'
           } 
+        />
+        <ButtonIcon alt="delete" 
+          onClick={(e) => onDeleteButtonClicked(e, layer)}
+          iconName={'MingcuteCloseFill.svg'}
         />
       </div>
     </S.LayerButtonContainer>
