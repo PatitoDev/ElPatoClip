@@ -144,32 +144,43 @@ export const LayerItem = ({
     >
       <S.LayerButton 
         hidden
-        onDoubleClick={onDoubleClick}
         onClick={onLayerClick} 
       />
       <div>
-        <img width={25} src="/icons/MingcuteDotsLine.svg"></img>
+        <img 
+          draggable={false} 
+          alt="" 
+          width={25} 
+          src="/icons/MingcuteDotsLine.svg"
+        />
         <S.InputColor 
           onClick={() => setSelectedLayer(layer.id)}
           onChange={(e) => updateLayerPartially(layer.id, { borderColor: e.target.value })} 
           type='color' 
           value={layer.borderColor} 
         />
-        {isEditingName ? 
-          <S.InputText
-            onKeyDown={onKeyDown}
-            ref={inputRef}
-            value={layer.name}
-            onChange={(e) => { updateLayerPartially(layer.id, { name: e.target.value });}}
-          />
-          : (
-            <span> {layer.name} </span>
-          )
-        }
       </div>
 
+      {isEditingName ? 
+        <S.InputText
+          onKeyDown={onKeyDown}
+          ref={inputRef}
+          value={layer.name}
+          onChange={(e) => { updateLayerPartially(layer.id, { name: e.target.value });}}
+        />
+        : (
+          <S.LayerName
+            onClick={onLayerClick} 
+            onDoubleClick={onDoubleClick}
+          > {layer.name} </S.LayerName>
+        )
+      }
+
       <div>
-        <ButtonIcon alt="locked" 
+        <ButtonIcon 
+          draggable={false}
+          title={layer.locked ? 'lock' : 'unlock'}
+          size='sm'
           selected={layer.locked}
           onClick={(e) => onLockedButtonClicked(e, layer)}
           iconName={
@@ -178,7 +189,11 @@ export const LayerItem = ({
               'MingcuteUnlockLine.svg'
           } 
         />
-        <ButtonIcon alt="delete" 
+        <ButtonIcon 
+          disabled={layer.locked}
+          draggable={false}
+          title="delete"
+          size='sm'
           onClick={(e) => onDeleteButtonClicked(e, layer)}
           iconName={'MingcuteCloseFill.svg'}
         />

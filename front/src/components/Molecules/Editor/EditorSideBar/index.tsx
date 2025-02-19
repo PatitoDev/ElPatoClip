@@ -29,7 +29,7 @@ export const SideBarSection = (props: SideBarSectionProps) => {
           {props.title}
         </S.SectionCollapseBtn>
         {props.onAddBtnClick && (
-          <S.SectionAddBtn onClick={props.onAddBtnClick}>
+          <S.SectionAddBtn title="New Layer" type="button" onClick={props.onAddBtnClick}>
             <img 
               width={20} 
               alt="" 
@@ -49,11 +49,14 @@ export const SideBarSection = (props: SideBarSectionProps) => {
 export const EditorSideBar = () => {
   const selectedLayer = useEditorState(state => state.selectedLayer);
   const setLayers = useEditorState(state => state.setLayers);
+  const setSelectedLayer = useEditorState(state => state.setSelectedLayer);
   const layers = useEditorState(state => state.layers);
 
   const updateLayers = useCallback(() => {
-    setLayers(addNewLayer(layers));
-  }, [setLayers, layers]);
+    const modifiedLayers = addNewLayer(layers);
+    setLayers(modifiedLayers);
+    setSelectedLayer(modifiedLayers.at(-1)?.id || null);
+  }, [setLayers, layers, setSelectedLayer]);
 
   return (
     <S.Container>
